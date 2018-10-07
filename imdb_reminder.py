@@ -1,7 +1,6 @@
 import argparse
 import requests
 import logging
-from bs4 import BeautifulSoup
 from lxml import html
 from datetime import datetime
 
@@ -18,8 +17,12 @@ def get_show_url(name):
     """Get the url of the show."""
     url = 'https://imdb.com/find?q={}'
     r = requests.get(url.format(name.replace(' ', '+')))
-    soup = BeautifulSoup(r.content, 'html.parser')
-    return 'https://www.imdb.com{}'.format(soup.find('tr').a['href'])
+    doc = html.fromstring(r.content)
+
+    # Extract link from the first search result
+    rel = doc.xpath('//td[@class="result_text"]/a/@href')[0]
+
+    return 'https://www.imdb.com{}'.format(rel)
 
 
 def get_show_status(url):
