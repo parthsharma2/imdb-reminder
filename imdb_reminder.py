@@ -1,12 +1,28 @@
 import argparse
 import requests
 import logging
+import configparser
+import sys
 from lxml import html
 from datetime import datetime
 
 
-parser = argparse.ArgumentParser(description='Send email reminders for TV-Shows.')
+config = configparser.ConfigParser()
+config.read('config.ini')
+try:
+    SENDER_EMAIL = config['email']['id']
+    SENDER_PASSWORD = config['email']['password']
+    SMTP_HOST = config['smtp']['host']
+    SMTP_PORT = config['smtp']['port']
+except KeyError as e:
+    logging.error('config.ini set incorrectly')
+    sys.exit()
 
+# Set logging config
+logging.basicConfig(filename='imdb_reminder.log', level=logging.DEBUG)
+
+# Set argparse config
+parser = argparse.ArgumentParser(description='Send email reminders for TV-Shows.')
 parser.add_argument('email', metavar='EMAIL',
                     help='Email to send the reminders to.')
 parser.add_argument('shows', metavar='SHOWS',
@@ -57,14 +73,15 @@ def get_show_status(url):
 
 
 def main():
+    """Driver function of the script."""
     args = parser.parse_args()
     email = args.email
     shows = ' '.join(args.shows).split(',')
     statuses = []
-    logging.info('Email: ' + email)
-    logging.info('Shows: ' + str(shows))
+    logging.info('Email: %s', email)
+    logging.info('Shows: %s', str(shows))
     for show in shows:
-        logging.info('Fetching: ' + show)
+        logging.info('Fetching: %s', show)
         url = get_show_url(show)
         status = get_show_status(url)
         statuses.append(status)
@@ -72,8 +89,8 @@ def main():
     logging.info('Generating message')
     msg = ""
     for show, status in zip(shows, statuses):
-        msg += 'TV Series Name: ' + show.title() + '\n'
-        msg += 'Status: ' + status + '\n\n'
+        msg += 'TV Series Name: {}\n'.format(show.title())
+        msg += 'Status: {}\n\n'.format(status)
 
     print(msg.strip())
 
