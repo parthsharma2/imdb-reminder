@@ -2,6 +2,7 @@ import argparse
 import requests
 import logging
 import configparser
+import smtplib
 import sys
 from lxml import html
 from datetime import datetime
@@ -27,6 +28,7 @@ parser.add_argument('email', metavar='EMAIL',
                     help='Email to send the reminders to.')
 parser.add_argument('shows', metavar='SHOWS',
                     nargs='+', help='Comma seperated Shows.')
+args = parser.parse_args()
 
 
 def get_show_url(name):
@@ -72,14 +74,26 @@ def get_show_status(url):
             return 'Next episode airs on {}'.format(airdate.strftime('%Y-%m-%d'))
 
 
+def send_email(msg):
+    smtp = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
+    smtp.starttls()
+    smtp.login(SENDER_EMAIL, SENDER_PASSWORD)
+
+    mail_msg = 'From: {}\nTo: {}\nSubject: TV-Show Reminder\n\n{}'
+    mail_msg = mail_msg.format(SENDER_EMAIL, args.email, msg)
+
+    smtp.sendmail(SENDER_EMAIL, args.email, mail_msg)
+
+
+
 def main():
     """Driver function of the script."""
-    args = parser.parse_args()
     email = args.email
     shows = ' '.join(args.shows).split(',')
     statuses = []
     logging.info('Email: %s', email)
     logging.info('Shows: %s', str(shows))
+    print('Fetching show details...')
     for show in shows:
         logging.info('Fetching: %s', show)
         url = get_show_url(show)
@@ -92,7 +106,15 @@ def main():
         msg += 'TV Series Name: {}\n'.format(show.title())
         msg += 'Status: {}\n\n'.format(status)
 
-    print(msg.strip())
+    print('Sending mail...')
+    logging.info('Sending mail')
+    send_email(msg)
+    print('Email sent!')
+    # try:
+    #     send_email(msg)
+    #     print('Email sent!')
+    # except SMTPException as e:
+    #     logging.error()
 
 
 if __name__ == '__main__':
