@@ -28,7 +28,7 @@ Replace `<EMAIL>` with the email id to send the reminder. Replace `<SHOWS>` with
 
 ## Example
 ```
-python3 imdb_reminder.py abc@xyz friends, the big bang theory
+python3 imdb_reminder.py abc@xyz friends, the big bang theory, brooklyn nine nine
 ```
 Result: \
 ![Email Reminder](https://i.imgur.com/qD0Tfpu.png)
